@@ -12,7 +12,6 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { InstallPromoModal } from "@/components/InstallPromoModal";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -100,11 +99,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
+        href: "https://fonts.bunny.net/css?family=inter:400,500,600,700|space-grotesk:500,600,700&display=swap",
       },
       { rel: "icon", href: "/icon-512.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icon-512.png" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -143,7 +141,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <InstallPromoModal />
       <Toaster theme="dark" position="top-center" richColors />
     </QueryClientProvider>
   );
