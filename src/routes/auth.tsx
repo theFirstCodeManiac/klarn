@@ -120,7 +120,7 @@ function AuthPage() {
       >
         {/* Card */}
         <div
-          className="relative overflow-hidden rounded-3xl p-8"
+          className="relative overflow-hidden rounded-3xl p-6 sm:p-8"
           style={{
             background: "linear-gradient(145deg, oklch(0.20 0.035 260), oklch(0.17 0.03 265))",
             border: "1px solid oklch(1 0 0 / 12%)",

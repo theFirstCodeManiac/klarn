@@ -911,7 +911,7 @@ function MeetingRoom() {
           </div>
 
           {/* HTML5 Canvas Audio visualizer */}
-          <div className="relative w-full max-w-md aspect-square flex items-center justify-center">
+          <div className="relative w-full max-w-[280px] sm:max-w-md aspect-square flex items-center justify-center">
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full rounded-full" />
             <div className="relative flex flex-col items-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-mint/10 border border-mint/20 text-mint">
