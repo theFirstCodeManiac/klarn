@@ -305,68 +305,43 @@ async function generateNotesInternal(
     .map((l) => `${l.speaker_name ?? "Someone"}: ${l.text}`)
     .join("\n");
 
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     await supabase
       .from("meeting_notes")
-      .update({ status: "error", summary: "AI notes unavailable (API key missing)." })
+      .update({ status: "error", summary: "AI notes unavailable (GEMINI_API_KEY missing in .env.local)." })
       .eq("meeting_id", meetingId);
     return;
   }
 
-  const systemPrompt =
-    "You are a professional meeting-notes assistant. Given a raw meeting transcript, return concise structured JSON with fields: summary (2-4 sentences), topics (string[]), decisions (string[]), action_items (array of {task, owner}). Owner may be null. Never invent facts.";
+  const prompt = `You are a professional meeting-notes assistant. Given the transcript below, respond ONLY with valid JSON (no markdown) with these fields:
+{
+  "summary": "2-4 sentence overview of the meeting",
+  "topics": ["topic1", "topic2"],
+  "decisions": ["decision1"],
+  "action_items": [{"task": "do X", "owner": "Alice or null"}]
+}
+Never invent facts not present in the transcript.
+
+Transcript:
+${transcript}`;
 
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
+        }),
       },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Transcript:\n\n${transcript}` },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "return_notes",
-              description: "Return structured meeting notes",
-              parameters: {
-                type: "object",
-                properties: {
-                  summary: { type: "string" },
-                  topics: { type: "array", items: { type: "string" } },
-                  decisions: { type: "array", items: { type: "string" } },
-                  action_items: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        task: { type: "string" },
-                        owner: { type: ["string", "null"] },
-                      },
-                      required: ["task"],
-                    },
-                  },
-                },
-                required: ["summary", "topics", "decisions", "action_items"],
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "return_notes" } },
-      }),
-    });
-    if (!res.ok) throw new Error(`AI ${res.status}`);
+    );
+    if (!res.ok) throw new Error(`Gemini API error ${res.status}: ${await res.text()}`);
     const json = await res.json();
-    const call = json.choices?.[0]?.message?.tool_calls?.[0];
-    const args = call ? JSON.parse(call.function.arguments) : null;
-    if (!args) throw new Error("No notes returned");
+    const raw = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const args = JSON.parse(raw);
     await supabase
       .from("meeting_notes")
       .update({
@@ -382,7 +357,7 @@ async function generateNotesInternal(
     console.error("notes generation failed", e);
     await supabase
       .from("meeting_notes")
-      .update({ status: "error", summary: "Failed to generate notes." })
+      .update({ status: "error", summary: "Failed to generate AI notes." })
       .eq("meeting_id", meetingId);
   }
 }
