@@ -72,18 +72,22 @@ function MeetingDetail() {
           )}
         </div>
 
-        {(notes?.decisions?.length ?? 0) > 0 && (
-          <div className="glass rounded-2xl p-5">
-            <h2 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-widest text-mint">
-              <ListChecks className="h-4 w-4" /> Decisions
-            </h2>
-            <ul className="mt-3 space-y-1.5 text-sm">
-              {(notes!.decisions as string[]).map((d, i) => (
-                <li key={i}>• {d}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {(() => {
+          const decisions = (notes?.decisions ?? []) as string[];
+          if (decisions.length === 0) return null;
+          return (
+            <div className="glass rounded-2xl p-5">
+              <h2 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-widest text-mint">
+                <ListChecks className="h-4 w-4" /> Decisions
+              </h2>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                {decisions.map((d, i) => (
+                  <li key={i}>• {d}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        })()}
 
         {items.length > 0 && (
           <div className="glass rounded-2xl p-5">

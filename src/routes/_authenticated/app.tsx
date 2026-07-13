@@ -36,7 +36,7 @@ function Dashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const [me, setMe] = useState<{ email?: string; display_name?: string } | null>(null);
+  const [me, setMe] = useState<{ email?: string | null; display_name?: string | null } | null>(null);
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
