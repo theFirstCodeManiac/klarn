@@ -99,30 +99,30 @@ function SpinningCube({ size = 60, duration = 8, reverse = false, color = "oklch
   );
 }
 
-// ─── Star field ───────────────────────────────────────────────
+// ─── Star field (client-only to avoid SSR hydration mismatch) ──
+// Deterministic pseudo-random avoids server/client value differences
+function sr(seed: number): number {
+  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function StarField({ count = 80 }: { count?: number }) {
-  const stars = useRef(
-    Array.from({ length: count }, (_, i) => ({
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      r: 0.8 + Math.random() * 1.8,
-      delay: Math.random() * 6,
-      dur: 2 + Math.random() * 4,
-    }))
-  );
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      {stars.current.map((s, i) => (
+      {Array.from({ length: count }, (_, i) => (
         <span
           key={i}
           className="absolute rounded-full bg-white"
           style={{
-            left: `${s.x}%`,
-            top: `${s.y}%`,
-            width: s.r,
-            height: s.r,
-            animation: `star-twinkle ${s.dur}s ease-in-out ${s.delay}s infinite`,
+            left: `${sr(i * 3) * 100}%`,
+            top: `${sr(i * 3 + 1) * 100}%`,
+            width: 0.8 + sr(i * 3 + 2) * 1.8,
+            height: 0.8 + sr(i * 3 + 2) * 1.8,
+            animation: `star-twinkle ${2 + sr(i * 7) * 4}s ease-in-out ${sr(i * 11) * 6}s infinite`,
           }}
         />
       ))}
@@ -224,7 +224,7 @@ function GalaxyRing() {
     <div
       className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
       aria-hidden
-      style={{ width: 600, height: 600 }}
+      style={{ width: "min(600px, 90vw)", height: "min(600px, 90vw)" }}
     >
       {[1, 0.7, 0.45].map((scale, i) => (
         <div
