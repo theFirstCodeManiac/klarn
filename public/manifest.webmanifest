@@ -1,0 +1,15 @@
+{
+  "name": "Klarn — Crystal-clear voice meetings",
+  "short_name": "Klarn",
+  "description": "Voice meetings with noise cancellation, live captions, recording, and AI notes.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F1424",
+  "theme_color": "#0F1424",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
