@@ -18,9 +18,17 @@ const REMEMBERED_EMAIL_KEY = "klarn_last_email";
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState(() => localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? "");
+  const [email, setEmail] = useState("");
   const [stage, setStage] = useState<"checking" | "email" | "sent">("checking");
   const [loading, setLoading] = useState(false);
+
+  // Load remembered email on client mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+      if (saved) setEmail(saved);
+    }
+  }, []);
 
   // Synchronous local session check and active state change listener
   useEffect(() => {
