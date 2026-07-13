@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Mic, ArrowRight, Mail, RotateCcw } from "lucide-react";
+import { Mic, ArrowRight, Mail, RotateCcw, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in to Klarn" },
-      { name: "description", content: "Sign in to Klarn with your email and a 6-digit code." },
+      { name: "description", content: "Sign in to Klarn using a magic link sent to your email." },
     ],
   }),
   component: AuthPage,
@@ -19,12 +19,10 @@ const REMEMBERED_EMAIL_KEY = "klarn_last_email";
 function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState(() => localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? "");
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-  const [stage, setStage] = useState<"checking" | "email" | "otp">("checking");
+  const [stage, setStage] = useState<"checking" | "email" | "sent">("checking");
   const [loading, setLoading] = useState(false);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Fast session check — use getSession() which reads localStorage synchronously
+  // Synchronous local session check and active state change listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
@@ -33,74 +31,41 @@ function AuthPage() {
         setStage("email");
       }
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        navigate({ to: "/app" });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const sendOtp = async (e: React.FormEvent) => {
+  const sendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    const redirectUrl = window.location.origin.includes("localhost")
+      ? `${window.location.origin}/auth`
+      : "https://klarn.vercel.app";
+
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
-      options: { shouldCreateUser: true },
+      options: {
+        emailRedirectTo: redirectUrl,
+        shouldCreateUser: true,
+      },
     });
+
     setLoading(false);
     if (error) {
       toast.error(error.message);
       return;
     }
+
     localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim().toLowerCase());
-    toast.success("Check your email for a 6-digit code");
-    setStage("otp");
-    setTimeout(() => inputRefs.current[0]?.focus(), 80);
-  };
-
-  const verifyOtp = async () => {
-    const token = otp.join("");
-    if (token.length < 6) return;
-    setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email: email.trim().toLowerCase(),
-      token,
-      type: "email",
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      setOtp(["", "", "", "", "", ""]);
-      setTimeout(() => inputRefs.current[0]?.focus(), 80);
-      return;
-    }
-    toast.success("You're in!");
-    navigate({ to: "/app" });
-  };
-
-  const handleOtpInput = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
-    const next = [...otp];
-    next[index] = digit;
-    setOtp(next);
-    if (digit && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-    // Auto-submit when all 6 filled
-    if (digit && index === 5 && next.every(Boolean)) {
-      setTimeout(() => verifyOtp(), 80);
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-    if (e.key === "Enter") verifyOtp();
-  };
-
-  const handleOtpPaste = (e: React.ClipboardEvent) => {
-    const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (text.length === 6) {
-      e.preventDefault();
-      setOtp(text.split(""));
-      setTimeout(() => verifyOtp(), 80);
-    }
+    toast.success("Magic link sent!");
+    setStage("sent");
   };
 
   if (stage === "checking") {
@@ -183,10 +148,10 @@ function AuthPage() {
                 Welcome back
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Enter your email — we'll send a 6-digit code. No password needed.
+                Enter your email — we'll send a secure login link. No password needed.
               </p>
 
-              <form onSubmit={sendOtp} className="mt-7 space-y-3">
+              <form onSubmit={sendMagicLink} className="mt-7 space-y-3">
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
@@ -233,7 +198,7 @@ function AuthPage() {
                     </>
                   ) : (
                     <>
-                      Send 6-digit code
+                      Send magic link
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                     </>
                   )}
@@ -241,84 +206,25 @@ function AuthPage() {
               </form>
             </>
           ) : (
-            <>
-              <h1 className="mt-7 font-display text-2xl font-bold">
-                Enter your code
-              </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                We sent a 6-digit code to{" "}
-                <span className="font-medium text-foreground">{email}</span>. It expires shortly.
-              </p>
-
-              <div className="mt-7 flex justify-center gap-2.5" onPaste={handleOtpPaste}>
-                {otp.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => { inputRefs.current[i] = el; }}
-                    id={`otp-${i}`}
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpInput(i, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                    className="h-14 w-12 rounded-xl text-center font-display text-xl font-bold outline-none transition-all"
-                    style={{
-                      background: digit
-                        ? "oklch(0.82 0.18 165 / 15%)"
-                        : "oklch(1 0 0 / 6%)",
-                      border: digit
-                        ? "1px solid oklch(0.82 0.18 165 / 50%)"
-                        : "1px solid oklch(1 0 0 / 12%)",
-                      boxShadow: digit
-                        ? "0 0 0 3px oklch(0.82 0.18 165 / 10%)"
-                        : "",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "oklch(0.82 0.18 165 / 60%)";
-                      e.target.style.boxShadow = "0 0 0 3px oklch(0.82 0.18 165 / 15%)";
-                    }}
-                    onBlur={(e) => {
-                      if (!digit) {
-                        e.target.style.borderColor = "oklch(1 0 0 / 12%)";
-                        e.target.style.boxShadow = "";
-                      }
-                    }}
-                  />
-                ))}
+            <div className="text-center mt-7">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-mint/10 border border-mint/20 text-mint mb-4">
+                <Sparkles className="h-6 w-6 animate-pulse" />
               </div>
-
-              <button
-                onClick={verifyOtp}
-                disabled={loading || otp.some((d) => !d)}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 hover:brightness-110 hover:scale-[1.02]"
-                style={{
-                  background: "linear-gradient(135deg, oklch(0.82 0.18 165), oklch(0.70 0.18 185))",
-                  color: "oklch(0.13 0.04 265)",
-                  boxShadow: "0 4px 20px oklch(0.82 0.18 165 / 30%)",
-                }}
-              >
-                {loading ? (
-                  <>
-                    <span
-                      className="h-4 w-4 rounded-full border-2 border-current border-t-transparent"
-                      style={{ animation: "spin-slow 0.7s linear infinite" }}
-                    />
-                    Verifying…
-                  </>
-                ) : (
-                  "Verify & continue"
-                )}
-              </button>
+              <h1 className="font-display text-2xl font-bold">
+                Check your email
+              </h1>
+              <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
+                We've sent a magic login link to <br />
+                <span className="font-semibold text-foreground">{email}</span>.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Click the button inside the email to sign in automatically.
+              </p>
 
               <button
                 type="button"
-                onClick={() => {
-                  setStage("email");
-                  setOtp(["", "", "", "", "", ""]);
-                }}
-                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-sm text-muted-foreground transition hover:text-foreground"
+                onClick={() => setStage("email")}
+                className="mt-8 flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-sm text-muted-foreground transition hover:text-foreground"
                 style={{
                   border: "1px solid oklch(1 0 0 / 10%)",
                   background: "oklch(1 0 0 / 4%)",
@@ -327,7 +233,7 @@ function AuthPage() {
                 <RotateCcw className="h-3.5 w-3.5" />
                 Use a different email
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
