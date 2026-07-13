@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MCodeRouteImport } from './routes/m.$code'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppMeetingsIdRouteImport } from './routes/_authenticated/app.meetings.$id'
 
@@ -27,6 +28,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MCodeRoute = MCodeRouteImport.update({
+  id: '/m/$code',
+  path: '/m/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
@@ -45,12 +51,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/m/$code': typeof MCodeRoute
   '/app/meetings/$id': typeof AuthenticatedAppMeetingsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/m/$code': typeof MCodeRoute
   '/app/meetings/$id': typeof AuthenticatedAppMeetingsIdRoute
 }
 export interface FileRoutesById {
@@ -59,19 +67,21 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/m/$code': typeof MCodeRoute
   '/_authenticated/app/meetings/$id': typeof AuthenticatedAppMeetingsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/app' | '/app/meetings/$id'
+  fullPaths: '/' | '/auth' | '/app' | '/m/$code' | '/app/meetings/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/app' | '/app/meetings/$id'
+  to: '/' | '/auth' | '/app' | '/m/$code' | '/app/meetings/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/app'
+    | '/m/$code'
     | '/_authenticated/app/meetings/$id'
   fileRoutesById: FileRoutesById
 }
@@ -79,6 +89,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  MCodeRoute: typeof MCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -102,6 +113,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/m/$code': {
+      id: '/m/$code'
+      path: '/m/$code'
+      fullPath: '/m/$code'
+      preLoaderRoute: typeof MCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app': {
@@ -147,6 +165,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  MCodeRoute: MCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
