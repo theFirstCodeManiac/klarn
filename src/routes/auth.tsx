@@ -94,25 +94,7 @@ function AuthPage() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
-      {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0" aria-hidden>
-        <div
-          className="absolute -top-20 left-1/4 h-[400px] w-[400px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, oklch(0.82 0.18 165 / 14%) 0%, transparent 70%)",
-            animation: "orb-drift-a 14s ease-in-out infinite",
-            filter: "blur(1px)",
-          }}
-        />
-        <div
-          className="absolute bottom-0 right-1/4 h-[300px] w-[300px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, oklch(0.55 0.18 240 / 10%) 0%, transparent 70%)",
-            animation: "orb-drift-b 18s ease-in-out infinite",
-            filter: "blur(1px)",
-          }}
-        />
-      </div>
+
 
       <div
         className="relative w-full max-w-md"
@@ -132,7 +114,6 @@ function AuthPage() {
             className="pointer-events-none absolute inset-x-0 top-0 h-px"
             style={{
               background: "linear-gradient(90deg, transparent, oklch(0.82 0.18 165 / 50%), transparent)",
-              animation: "border-glow 3s ease-in-out infinite",
             }}
           />
 

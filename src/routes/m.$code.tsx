@@ -710,10 +710,6 @@ function MeetingRoom() {
 
     return (
       <main className="relative min-h-screen bg-background py-10 px-5 overflow-y-auto">
-        <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
-          <div className="absolute top-0 right-0 h-[400px] w-[400px] rounded-full bg-mint/5 blur-[80px]" />
-          <div className="absolute bottom-0 left-0 h-[350px] w-[350px] rounded-full bg-blue-500/5 blur-[80px]" />
-        </div>
 
         <div className="relative mx-auto max-w-4xl" style={{ animation: "scale-in 0.5s ease-out both" }}>
           {/* Header */}
@@ -860,17 +856,6 @@ function MeetingRoom() {
 
   return (
     <main className="flex min-h-screen flex-col bg-background relative overflow-hidden">
-      {/* Drifting Ambient Background Orb */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
-        <div
-          className="absolute top-1/4 left-1/4 h-[350px] w-[350px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, oklch(0.82 0.18 165 / 7%) 0%, transparent 70%)",
-            animation: "orb-drift-a 24s ease-in-out infinite",
-            filter: "blur(2px)",
-          }}
-        />
-      </div>
 
       <header className="flex items-center justify-between border-b border-border bg-card/10 px-5 py-3 relative z-10">
         <div className="flex items-center gap-2">

@@ -53,23 +53,6 @@ function Dashboard() {
 
   return (
     <main className="relative min-h-screen overflow-x-hidden">
-      {/* Ambient orbs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
-        <div
-          className="absolute -top-24 -left-24 h-[400px] w-[400px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, oklch(0.82 0.18 165 / 10%) 0%, transparent 70%)",
-            animation: "orb-drift-a 20s ease-in-out infinite",
-          }}
-        />
-        <div
-          className="absolute top-1/2 -right-32 h-[350px] w-[350px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, oklch(0.55 0.18 240 / 8%) 0%, transparent 70%)",
-            animation: "orb-drift-b 24s ease-in-out infinite",
-          }}
-        />
-      </div>
 
       <div className="relative mx-auto max-w-4xl px-5 py-8">
         {/* Header */}
