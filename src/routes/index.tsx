@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Mic, Waves, Radio, Sparkles, ShieldCheck, Download, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -65,194 +65,6 @@ function Typewriter() {
   );
 }
 
-// ─── 3D Rotating Cube ─────────────────────────────────────────
-function SpinningCube({ size = 60, duration = 8, reverse = false, color = "oklch(0.82 0.18 165 / 20%)", borderColor = "oklch(0.82 0.18 165 / 35%)" }: {
-  size?: number; duration?: number; reverse?: boolean; color?: string; borderColor?: string;
-}) {
-  const style = {
-    width: size, height: size,
-    animation: `${reverse ? "cube-spin-reverse" : "cube-spin"} ${duration}s linear infinite`,
-    transformStyle: "preserve-3d" as const,
-    position: "relative" as const,
-  };
-
-  const face = (transform: string) => ({
-    position: "absolute" as const,
-    width: "100%", height: "100%",
-    background: color,
-    border: `1px solid ${borderColor}`,
-    backdropFilter: "blur(4px)",
-    transform,
-  });
-
-  const h = size / 2;
-
-  return (
-    <div style={style}>
-      <div style={face(`rotateY(0deg)   translateZ(${h}px)`)} />
-      <div style={face(`rotateY(180deg) translateZ(${h}px)`)} />
-      <div style={face(`rotateY(90deg)  translateZ(${h}px)`)} />
-      <div style={face(`rotateY(-90deg) translateZ(${h}px)`)} />
-      <div style={face(`rotateX(90deg)  translateZ(${h}px)`)} />
-      <div style={face(`rotateX(-90deg) translateZ(${h}px)`)} />
-    </div>
-  );
-}
-
-// ─── Star field (client-only to avoid SSR hydration mismatch) ──
-// Deterministic pseudo-random avoids server/client value differences
-function sr(seed: number): number {
-  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-function StarField({ count = 80 }: { count?: number }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      {Array.from({ length: count }, (_, i) => (
-        <span
-          key={i}
-          className="absolute rounded-full bg-white"
-          style={{
-            left: `${sr(i * 3) * 100}%`,
-            top: `${sr(i * 3 + 1) * 100}%`,
-            width: 0.8 + sr(i * 3 + 2) * 1.8,
-            height: 0.8 + sr(i * 3 + 2) * 1.8,
-            animation: `star-twinkle ${2 + sr(i * 7) * 4}s ease-in-out ${sr(i * 11) * 6}s infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ─── Comet ────────────────────────────────────────────────────
-function Comet({ delay = 0, top = "20%" }: { delay?: number; top?: string }) {
-  return (
-    <div
-      className="pointer-events-none absolute"
-      style={{ top, left: 0, animation: `comet-streak 7s linear ${delay}s infinite` }}
-      aria-hidden
-    >
-      <div
-        style={{
-          width: 120,
-          height: 2,
-          background: "linear-gradient(90deg, transparent, oklch(0.82 0.18 165), white)",
-          borderRadius: 999,
-          boxShadow: "0 0 8px 2px oklch(0.82 0.18 165 / 60%)",
-        }}
-      />
-    </div>
-  );
-}
-
-// ─── Cars on a road ───────────────────────────────────────────
-function RoadScene() {
-  const cars = [
-    { delay: 0,   y: 8,  color: "oklch(0.82 0.18 165)", w: 36, h: 14 },
-    { delay: 2.5, y: 26, color: "oklch(0.65 0.18 230)", w: 44, h: 14 },
-    { delay: 5,   y: 8,  color: "oklch(0.70 0.15 190)", w: 32, h: 14 },
-    { delay: 7.5, y: 26, color: "oklch(0.82 0.18 165 / 60%)", w: 40, h: 14 },
-  ];
-
-  return (
-    <div
-      className="relative overflow-hidden rounded-2xl"
-      style={{
-        height: 54,
-        background: "linear-gradient(180deg, oklch(0.16 0.03 265) 0%, oklch(0.14 0.03 265) 100%)",
-        border: "1px solid oklch(1 0 0 / 10%)",
-      }}
-      aria-hidden
-    >
-      {/* Road surface */}
-      <div
-        className="absolute inset-x-0"
-        style={{
-          top: "50%",
-          height: 2,
-          background: "oklch(1 0 0 / 8%)",
-          transform: "translateY(-50%)",
-        }}
-      />
-      {/* Dashed center line */}
-      <div
-        className="absolute inset-x-0"
-        style={{
-          top: "50%",
-          height: 2,
-          background: "repeating-linear-gradient(90deg, oklch(0.82 0.18 165 / 30%) 0px, oklch(0.82 0.18 165 / 30%) 16px, transparent 16px, transparent 32px)",
-          transform: "translateY(-50%)",
-          animation: "road-scroll 1.5s linear infinite",
-        }}
-      />
-      {/* Cars */}
-      {cars.map((c, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            top: c.y,
-            width: c.w,
-            height: c.h,
-            background: c.color,
-            borderRadius: 3,
-            boxShadow: `0 0 10px ${c.color}`,
-            animation: `car-drive 4s linear ${c.delay}s infinite`,
-          }}
-        >
-          {/* Headlight glow */}
-          <div style={{
-            position: "absolute", right: -6, top: 2, width: 8, height: 10,
-            background: `radial-gradient(ellipse, ${c.color} 0%, transparent 70%)`,
-            opacity: 0.9,
-          }} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Galaxy Ring ──────────────────────────────────────────────
-function GalaxyRing() {
-  return (
-    <div
-      className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-      aria-hidden
-      style={{ width: "min(600px, 90vw)", height: "min(600px, 90vw)" }}
-    >
-      {[1, 0.7, 0.45].map((scale, i) => (
-        <div
-          key={i}
-          className="absolute inset-0 rounded-full"
-          style={{
-            transform: `scale(${scale})`,
-            border: "1px solid oklch(0.82 0.18 165 / 8%)",
-            animation: `galaxy-spin ${18 + i * 10}s linear infinite`,
-            transformOrigin: "center center",
-          }}
-        >
-          {/* Dot on orbit */}
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{
-              width: 6 - i,
-              height: 6 - i,
-              background: "oklch(0.82 0.18 165)",
-              boxShadow: "0 0 8px oklch(0.82 0.18 165)",
-            }}
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ─── Canvas audio waveform ────────────────────────────────────
 function Waveform() {
   const bars = Array.from({ length: 32 });
@@ -288,41 +100,6 @@ const features = [
 function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-background">
-      {/* Star field */}
-      <StarField count={100} />
-
-      {/* Comets */}
-      <Comet delay={0} top="15%" />
-      <Comet delay={3.5} top="55%" />
-      <Comet delay={7} top="33%" />
-
-      {/* Ambient orbs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
-        <div
-          className="absolute -top-32 -left-32 h-[560px] w-[560px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, oklch(0.82 0.18 165 / 18%) 0%, transparent 70%)",
-            animation: "orb-drift-a 18s ease-in-out infinite",
-            filter: "blur(2px)",
-          }}
-        />
-        <div
-          className="absolute top-1/3 -right-40 h-[480px] w-[480px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, oklch(0.55 0.18 240 / 14%) 0%, transparent 70%)",
-            animation: "orb-drift-b 22s ease-in-out infinite",
-            filter: "blur(2px)",
-          }}
-        />
-        <div
-          className="absolute bottom-0 left-1/3 h-[400px] w-[400px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, oklch(0.70 0.16 190 / 10%) 0%, transparent 70%)",
-            animation: "orb-drift-c 16s ease-in-out infinite",
-            filter: "blur(2px)",
-          }}
-        />
-      </div>
 
       {/* ── Nav ── */}
       <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
@@ -337,13 +114,6 @@ function LandingPage() {
             <Mic className="h-4 w-4 text-white" />
           </div>
           <span className="font-display text-xl font-semibold">Klarn</span>
-        </div>
-
-        {/* Floating 3D cubes in nav */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center gap-8 opacity-25" aria-hidden>
-          <SpinningCube size={18} duration={6} />
-          <SpinningCube size={12} duration={9} reverse />
-          <SpinningCube size={18} duration={7} />
         </div>
 
         <Link
@@ -361,11 +131,6 @@ function LandingPage() {
 
       {/* ── Hero ── */}
       <section className="relative mx-auto max-w-4xl px-6 pb-12 pt-6 text-center sm:pt-12">
-        {/* Galaxy ring behind hero text */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
-          <GalaxyRing />
-        </div>
-
         <div className="relative">
           <span
             className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium"
@@ -431,20 +196,7 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ── 3D Cube showcase ── */}
-      <section
-        className="relative mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-12 px-6 py-10"
-        aria-hidden
-        style={{ animation: "fade-in 0.8s ease-out 0.5s both" }}
-      >
-        <SpinningCube size={72} duration={9} color="oklch(0.82 0.18 165 / 12%)" borderColor="oklch(0.82 0.18 165 / 35%)" />
-        <SpinningCube size={48} duration={13} reverse color="oklch(0.55 0.18 240 / 12%)" borderColor="oklch(0.55 0.18 240 / 35%)" />
-        <SpinningCube size={60} duration={10} color="oklch(0.70 0.16 190 / 12%)" borderColor="oklch(0.70 0.16 190 / 35%)" />
-        <SpinningCube size={36} duration={7} reverse color="oklch(0.82 0.18 165 / 8%)" borderColor="oklch(0.82 0.18 165 / 25%)" />
-        <SpinningCube size={80} duration={15} color="oklch(0.60 0.18 210 / 10%)" borderColor="oklch(0.60 0.18 210 / 28%)" />
-      </section>
-
-      {/* ── Waveform + Road ── */}
+      {/* ── Waveform ── */}
       <section className="relative mx-auto max-w-4xl px-6 pb-8" style={{ animation: "slide-up 0.7s ease-out 0.4s both" }}>
         <div
           className="relative overflow-hidden rounded-3xl p-8"
@@ -452,7 +204,6 @@ function LandingPage() {
             background: "linear-gradient(135deg, oklch(0.18 0.035 260), oklch(0.15 0.03 265))",
             border: "1px solid oklch(1 0 0 / 10%)",
             boxShadow: "0 32px 80px oklch(0 0 0 / 50%), inset 0 1px 0 oklch(1 0 0 / 10%)",
-            animation: "float-y 6s ease-in-out infinite",
           }}
         >
           {/* Glow line */}
@@ -466,14 +217,6 @@ function LandingPage() {
             Live noise-cancelled audio
           </div>
         </div>
-
-        {/* Road scene below the card */}
-        <div className="mt-4">
-          <RoadScene />
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            Meetings moving at full speed →
-          </p>
-        </div>
       </section>
 
       {/* ── Feature grid ── */}
@@ -481,31 +224,13 @@ function LandingPage() {
         {features.map(({ icon: Icon, title, body }, idx) => (
           <div
             key={title}
-            className="group relative overflow-hidden rounded-2xl p-5 transition-all duration-300"
+            className="group relative overflow-hidden rounded-2xl p-5 transition-colors duration-200 hover:border-mint/30"
             style={{
               background: "linear-gradient(135deg, oklch(0.18 0.035 260), oklch(0.16 0.03 265))",
               border: "1px solid oklch(1 0 0 / 9%)",
               animation: `fade-up 0.5s ease-out ${idx * 0.07}s both`,
-              transformStyle: "preserve-3d",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.transform =
-                "perspective(700px) rotateX(-2deg) rotateY(2deg) translateY(-5px)";
-              (e.currentTarget as HTMLElement).style.borderColor = "oklch(0.82 0.18 165 / 30%)";
-              (e.currentTarget as HTMLElement).style.boxShadow =
-                "0 20px 50px oklch(0 0 0 / 40%), 0 0 30px oklch(0.82 0.18 165 / 8%)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.transform = "";
-              (e.currentTarget as HTMLElement).style.borderColor = "";
-              (e.currentTarget as HTMLElement).style.boxShadow = "";
             }}
           >
-            {/* Top glow */}
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition-opacity group-hover:opacity-100"
-              style={{ background: "linear-gradient(90deg, transparent, oklch(0.82 0.18 165 / 45%), transparent)" }}
-            />
             <div
               className="flex h-10 w-10 items-center justify-center rounded-xl"
               style={{
