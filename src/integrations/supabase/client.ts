@@ -27,6 +27,24 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 
+const mockSupabase = {
+  auth: {
+    onAuthStateChange: () => ({
+      data: { subscription: { unsubscribe: () => {} } }
+    }),
+    getSession: async () => ({ data: { session: null } }),
+    signInWithOtp: async () => ({ error: new Error("Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to your deployment.") }),
+    signOut: async () => ({ error: null }),
+  },
+  from: () => ({
+    select: () => ({
+      eq: () => ({
+        maybeSingle: async () => ({ data: null })
+      })
+    })
+  })
+} as any;
+
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
@@ -38,9 +56,9 @@ function createSupabaseClient() {
       ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
       ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Please configure them.`;
+    console.warn(`[Supabase] ${message}`);
+    return mockSupabase;
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -65,4 +83,5 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
+
 
